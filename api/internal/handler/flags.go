@@ -106,7 +106,7 @@ func (h *FlagHandler) Delete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	h.queries.InsertAuditLog(r.Context(), flag.ID, model.AuditDeleted, audit.FlagSnapshot(flag), middleware.GetActor(r.Context()))
+	h.queries.InsertAuditLog(r.Context(), flag.ID, model.AuditDeleted, audit.FlagDeleteSnapshot(flag), middleware.GetActor(r.Context()))
 
 	h.cache.InvalidateFlag(r.Context(), key)
 	w.WriteHeader(http.StatusNoContent)

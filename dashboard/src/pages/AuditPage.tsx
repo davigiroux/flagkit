@@ -40,9 +40,17 @@ export function AuditPage() {
                         {Object.entries(log.diff).map(([field, change]) => (
                           <div key={field} className="font-mono text-xs">
                             <span className="text-gray-600">{field}:</span>{' '}
-                            <span className="text-red-500">{JSON.stringify(change.from)}</span>
-                            {' → '}
-                            <span className="text-green-600">{JSON.stringify(change.to)}</span>
+                            {change.from == null ? (
+                              <span className="text-green-600">{JSON.stringify(change.to)}</span>
+                            ) : change.to == null ? (
+                              <span className="text-red-500 line-through">{JSON.stringify(change.from)}</span>
+                            ) : (
+                              <>
+                                <span className="text-red-500">{JSON.stringify(change.from)}</span>
+                                {' → '}
+                                <span className="text-green-600">{JSON.stringify(change.to)}</span>
+                              </>
+                            )}
                           </div>
                         ))}
                       </div>

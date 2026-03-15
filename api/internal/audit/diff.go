@@ -42,6 +42,31 @@ func MarshalDiff(diff map[string]FieldChange) json.RawMessage {
 }
 
 func FlagSnapshot(flag *model.Flag) json.RawMessage {
-	data, _ := json.Marshal(flag)
-	return data
+	var rules any
+	json.Unmarshal(flag.Rules, &rules)
+
+	diff := map[string]FieldChange{
+		"key":         {From: nil, To: flag.Key},
+		"name":        {From: nil, To: flag.Name},
+		"description": {From: nil, To: flag.Description},
+		"enabled":     {From: nil, To: flag.Enabled},
+		"environment": {From: nil, To: string(flag.Environment)},
+		"rules":       {From: nil, To: rules},
+	}
+	return MarshalDiff(diff)
+}
+
+func FlagDeleteSnapshot(flag *model.Flag) json.RawMessage {
+	var rules any
+	json.Unmarshal(flag.Rules, &rules)
+
+	diff := map[string]FieldChange{
+		"key":         {From: flag.Key, To: nil},
+		"name":        {From: flag.Name, To: nil},
+		"description": {From: flag.Description, To: nil},
+		"enabled":     {From: flag.Enabled, To: nil},
+		"environment": {From: string(flag.Environment), To: nil},
+		"rules":       {From: rules, To: nil},
+	}
+	return MarshalDiff(diff)
 }
