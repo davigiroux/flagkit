@@ -1,0 +1,8 @@
+node_modules/
+dist/
+.env
+*.env.local
+tmp/
+api/flagkit-api
+api/tmp/
+.DS_Store
