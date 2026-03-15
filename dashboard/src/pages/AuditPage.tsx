@@ -37,22 +37,34 @@ export function AuditPage() {
                   <td className="px-4 py-3">
                     {log.diff && Object.keys(log.diff).length > 0 ? (
                       <div className="space-y-1">
-                        {Object.entries(log.diff).map(([field, change]) => (
-                          <div key={field} className="font-mono text-xs">
-                            <span className="text-gray-600">{field}:</span>{' '}
-                            {change.from == null ? (
-                              <span className="text-green-600">{JSON.stringify(change.to)}</span>
-                            ) : change.to == null ? (
-                              <span className="text-red-500 line-through">{JSON.stringify(change.from)}</span>
-                            ) : (
-                              <>
-                                <span className="text-red-500">{JSON.stringify(change.from)}</span>
-                                {' → '}
+                        {Object.entries(log.diff).map(([field, change]) => {
+                          const isDiff = change != null && typeof change === 'object' && ('from' in change || 'to' in change)
+                          if (!isDiff) {
+                            // Legacy flat format: field → value
+                            return (
+                              <div key={field} className="font-mono text-xs">
+                                <span className="text-gray-600">{field}:</span>{' '}
+                                <span className="text-green-600">{JSON.stringify(change)}</span>
+                              </div>
+                            )
+                          }
+                          return (
+                            <div key={field} className="font-mono text-xs">
+                              <span className="text-gray-600">{field}:</span>{' '}
+                              {change.from == null && change.to != null ? (
                                 <span className="text-green-600">{JSON.stringify(change.to)}</span>
-                              </>
-                            )}
-                          </div>
-                        ))}
+                              ) : change.to == null && change.from != null ? (
+                                <span className="text-red-500 line-through">{JSON.stringify(change.from)}</span>
+                              ) : (
+                                <>
+                                  <span className="text-red-500">{JSON.stringify(change.from)}</span>
+                                  {' → '}
+                                  <span className="text-green-600">{JSON.stringify(change.to)}</span>
+                                </>
+                              )}
+                            </div>
+                          )
+                        })}
                       </div>
                     ) : (
                       <span className="text-gray-400 text-xs">—</span>
