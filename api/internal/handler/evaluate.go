@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"log"
 	"net/http"
 
 	"github.com/davigiroux/flagkit/api/internal/cache"
@@ -23,7 +24,10 @@ func (h *EvalHandler) Evaluate(w http.ResponseWriter, r *http.Request) {
 	userID := r.URL.Query().Get("user_id")
 
 	// Try cache first
-	flag, _ := h.cache.GetFlag(r.Context(), key)
+	flag, err := h.cache.GetFlag(r.Context(), key)
+	if err != nil {
+		log.Printf("cache error for flag %q: %v", key, err)
+	}
 	if flag == nil {
 		var err error
 		flag, err = h.queries.GetFlagByKey(r.Context(), key)
@@ -31,7 +35,9 @@ func (h *EvalHandler) Evaluate(w http.ResponseWriter, r *http.Request) {
 			writeError(w, http.StatusNotFound, "flag not found")
 			return
 		}
-		h.cache.SetFlag(r.Context(), flag)
+		if err := h.cache.SetFlag(r.Context(), flag); err != nil {
+			log.Printf("cache set error for flag %q: %v", key, err)
+		}
 	}
 
 	result := evaluate.Evaluate(flag, userID)
