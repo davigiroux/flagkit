@@ -2,6 +2,7 @@ package handler
 
 import (
 	"encoding/json"
+	"log"
 	"net/http"
 
 	"github.com/davigiroux/flagkit/api/internal/audit"
@@ -60,7 +61,9 @@ func (h *FlagHandler) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	h.queries.InsertAuditLog(r.Context(), flag.ID, model.AuditCreated, audit.FlagSnapshot(flag), middleware.GetActor(r.Context()))
+	if err := h.queries.InsertAuditLog(r.Context(), flag.ID, model.AuditCreated, audit.FlagSnapshot(flag), middleware.GetActor(r.Context())); err != nil {
+		log.Printf("audit log error (create flag %q): %v", flag.Key, err)
+	}
 
 	writeJSON(w, http.StatusCreated, flag)
 }
@@ -86,9 +89,13 @@ func (h *FlagHandler) Update(w http.ResponseWriter, r *http.Request) {
 	}
 
 	diff := audit.ComputeDiff(oldFlag, flag)
-	h.queries.InsertAuditLog(r.Context(), flag.ID, model.AuditUpdated, audit.MarshalDiff(diff), middleware.GetActor(r.Context()))
+	if err := h.queries.InsertAuditLog(r.Context(), flag.ID, model.AuditUpdated, audit.MarshalDiff(diff), middleware.GetActor(r.Context())); err != nil {
+		log.Printf("audit log error (update flag %q): %v", key, err)
+	}
 
-	h.cache.InvalidateFlag(r.Context(), key)
+	if err := h.cache.InvalidateFlag(r.Context(), key); err != nil {
+		log.Printf("cache invalidation error for flag %q: %v", key, err)
+	}
 	writeJSON(w, http.StatusOK, flag)
 }
 
@@ -106,9 +113,13 @@ func (h *FlagHandler) Delete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	h.queries.InsertAuditLog(r.Context(), flag.ID, model.AuditDeleted, audit.FlagDeleteSnapshot(flag), middleware.GetActor(r.Context()))
+	if err := h.queries.InsertAuditLog(r.Context(), flag.ID, model.AuditDeleted, audit.FlagDeleteSnapshot(flag), middleware.GetActor(r.Context())); err != nil {
+		log.Printf("audit log error (delete flag %q): %v", key, err)
+	}
 
-	h.cache.InvalidateFlag(r.Context(), key)
+	if err := h.cache.InvalidateFlag(r.Context(), key); err != nil {
+		log.Printf("cache invalidation error for flag %q: %v", key, err)
+	}
 	w.WriteHeader(http.StatusNoContent)
 }
 
@@ -128,9 +139,13 @@ func (h *FlagHandler) Toggle(w http.ResponseWriter, r *http.Request) {
 	}
 
 	diff := audit.ComputeDiff(oldFlag, flag)
-	h.queries.InsertAuditLog(r.Context(), flag.ID, model.AuditToggled, audit.MarshalDiff(diff), middleware.GetActor(r.Context()))
+	if err := h.queries.InsertAuditLog(r.Context(), flag.ID, model.AuditToggled, audit.MarshalDiff(diff), middleware.GetActor(r.Context())); err != nil {
+		log.Printf("audit log error (toggle flag %q): %v", key, err)
+	}
 
-	h.cache.InvalidateFlag(r.Context(), key)
+	if err := h.cache.InvalidateFlag(r.Context(), key); err != nil {
+		log.Printf("cache invalidation error for flag %q: %v", key, err)
+	}
 	writeJSON(w, http.StatusOK, flag)
 }
 
